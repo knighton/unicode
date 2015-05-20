@@ -10,6 +10,8 @@ using std::getline;
 using std::ifstream;
 using std::map;
 
+#define UNUSED(a) &(a)
+
 template <typename Container>
 size_t ContainerHash<Container>::operator()(const Container& c) const {
     return boost::hash_range(c.begin(), c.end());
@@ -336,6 +338,110 @@ bool UnicodeManager::EachUPC(
     }
 }
 
+bool UnicodeManager::ReorderUPC(
+        const UnicodeSpan& span, ustring* inout) const {
+    auto ok = true;
+    for (auto i = span.begin + 1; i < span.end_excl; ++i) {
+        auto& prev_c = (*inout)[i - 1];
+        auto& c = (*inout)[i];
+        auto prev_k = GetCombiningClass(prev_c);
+        auto k = GetCombiningClass(c);
+        if (k < prev_k) {
+            ok = false;
+            break;
+        }
+    }
+
+    if (ok) {
+        return false;
+    }
+
+    map<UnicodeCombiningClass, vector<ucode>> k2cc;
+    for (auto i = span.begin; i < span.end_excl; ++i) {
+        auto& c = (*inout)[i];
+        auto k = GetCombiningClass(c);
+        k2cc[k].emplace_back(c);
+    }
+
+    auto i = span.begin;
+    for (auto it : k2cc) {
+        for (auto& c : it.second) {
+            (*inout)[i++] = c;
+        }
+    }
+
+    return true;
+}
+
+bool UnicodeManager::Reorder(ustring* inout) const {
+    size_t index = 0;
+    UnicodeSpan span;
+    bool changed = false;
+    while (EachUPC(*inout, &index, &span)) {
+        changed |= ReorderUPC(span, inout);
+    }
+    return changed;
+}
+
+bool UnicodeManager::DecomposeStep(
+        const unordered_map<ucode, ustring>& decomp_c2cc,
+        ustring* inout) const {
+    bool changed = false;
+    ustring rr;
+    for (auto& c : *inout) {
+        auto it = decomp_c2cc.find(c);
+        if (it != decomp_c2cc.end()) {
+            for (auto& r : it->second) {
+                rr.emplace_back(r);
+            }
+            changed = true;
+        } else {
+            rr.emplace_back(c);
+        }
+    }
+
+    changed |= Reorder(&rr);
+
+    if (changed) {
+        *inout = rr;
+    }
+    return changed;
+}
+
+void UnicodeManager::Decompose(
+        const unordered_map<ucode, ustring>& decomp_c2cc,
+        ustring* inout) const {
+    korean_.Decompose(inout);
+    while (DecomposeStep(decomp_c2cc, inout)) {
+        ;
+    }
+}
+
+void UnicodeManager::Compose(
+        const unordered_map<ucode, ustring>& decomp_c2cc,
+        ustring* inout) const {
+    UNUSED(decomp_c2cc);
+    UNUSED(inout);
+}
+
 bool UnicodeManager::Normalize(
         UnicodeNormalizationMethod method, ustring* s) const {
+    switch (method) {
+    case UNM_NFD:
+        Decompose(nfd_c2cc_, s);
+        break;
+    case UNM_NFC:
+        Compose(nfd_c2cc_, s);
+        break;
+    case UNM_NFKD:
+        Decompose(nfkd_c2cc_, s);
+        break;
+    case UNM_NFKC:
+        Compose(nfkd_c2cc_, s);
+        break;
+    default:
+        return false;
+    }
+
+    return true;
 }

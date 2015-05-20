@@ -62,6 +62,34 @@ class UnicodeManager {
     bool EachNormalUPC(const ustring& in, size_t* index,
                        UnicodeSpan* span) const;
 
+    // Correctly order the combining characters of a user-perceived character.
+    //
+    // * Each code point's canonical combining class must be in ascending order.
+    // * For code points with the same canonical combining class, their original
+    //   order is preserved (blocking characters affect composition).
+    //
+    // Returns whether it modified the string.
+    bool ReorderUPC(const UnicodeSpan& span, ustring* inout) const;
+
+    // Correctly order all combining characters in the text.
+    //
+    // Returns whether it modified the string.
+    bool Reorder(ustring* inout) const;
+
+    // Perform one iteration of decomposition.
+    //
+    // Returns whether it modified the string.
+    bool DecomposeStep(const unordered_map<ucode, ustring>& decomp_c2cc,
+                       ustring* inout) const;
+
+    // Decompose and reorder the code points given a mapping.
+    void Decompose(const unordered_map<ucode, ustring>& decomp_c2cc,
+                   ustring* inout) const;
+
+    // Decompose, reorder, and recompose the code points given mappings.
+    void Compose(const unordered_map<ucode, ustring>& decomp_c2cc,
+                 ustring* inout) const;
+
     unordered_map<ucode, UnicodeCombiningClass> c2k_;
     ucode first_nonzero_k_ucode_;
     ucode last_nonzero_k_ucode_;
