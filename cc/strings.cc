@@ -1,6 +1,17 @@
 #include "strings.h"
 
+#include <cctype>
+
 namespace strings {
+
+bool IsSpace(const string& s) {
+    for (auto& c : s) {
+        if (!isspace(c)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 void Split(const string& s, char c, vector<string>* v) {
     v->clear();

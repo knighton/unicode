@@ -1,10 +1,10 @@
 #include "unicode_manager.h"
 
 #include <boost/functional/hash.hpp>
-#include <cctype>
 #include <map>
 #include <fstream>
 
+#include "cc/files.h"
 #include "cc/strings.h"
 
 using std::getline;
@@ -17,30 +17,6 @@ size_t ContainerHash<Container>::operator()(const Container& c) const {
 }
 
 namespace {
-
-bool IsSpace(const string& s) {
-    for (auto& c : s) {
-        if (!isspace(c)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool EachLine(ifstream* in, string* line) {
-    while (getline(*in, *line)) {
-        size_t x = line->find('#');
-        if (x != ~0ul) {
-            line->resize(x);
-        }
-        strings::Trim(line);
-        if (IsSpace(*line)) {
-            continue;
-        }
-        return true;
-    }
-    return false;
-}
 
 bool GetBounds(const unordered_map<ucode, UnicodeCombiningClass>& c2k,
                ucode* first_nonzero_k_ucode, ucode* last_nonzero_k_ucode) {
@@ -63,51 +39,6 @@ bool GetBounds(const unordered_map<ucode, UnicodeCombiningClass>& c2k,
     return true;
 }
 
-bool ParseHexCodePoint(const string& in, ucode* out, string* error) {
-    if (in.empty()) {
-        *error = "[UnicodeManager] Empty code point string.";
-        return false;
-    }
-
-    ucode r = 0;
-    for (auto& c : in) {
-        if ('0' <= c && c <= '9') {
-            r *= 16;
-            r += static_cast<ucode>(c - '0');
-        } else if ('A' <= c && c <= 'F') {
-            r *= 16;
-            r += static_cast<ucode>(c - 'A');
-        } else {
-            *error = "[UnicodeManager] Invalid character in code point string.";
-            return false;
-        }
-    }
-
-    *out = r;
-    return true;
-}
-
-bool ParseUInt8(const string& in, uint8_t* out, string* error) {
-    if (in.empty()) {
-        *error = "[UnicodeManager] Empty uint8_t string.";
-        return false;
-    }
-
-    uint8_t r = 0;
-    for (auto& c : in) {
-        if ('0' <= c && c <= '9') {
-            r *= 10;
-            r += static_cast<ucode>(c - '0');
-        } else {
-            *error = "[UnicodeManager] Invalid character in uint8_t string.";
-            return false;
-        }
-    }
-
-    *out = r;
-    return true;
-}
-
 bool HandleNFCLineCombiningClass(
         const string& line, size_t split,
         unordered_map<ucode, UnicodeCombiningClass>* c2k, string* error) {
@@ -117,7 +48,8 @@ bool HandleNFCLineCombiningClass(
     string s;
     if (dot == ~0ul) {
         s = line.substr(0, split);
-        if (!ParseHexCodePoint(s, &begin, error)) {
+        if (!strings::ParseHex(s, &begin)) {
+            *error = "[UnicodeManager] Parsing code point failed.";
             return false;
         }
         end_incl = begin;
@@ -127,17 +59,20 @@ bool HandleNFCLineCombiningClass(
             return false;
         }
         s = line.substr(0, dot);
-        if (!ParseHexCodePoint(s, &begin, error)) {
+        if (!strings::ParseHex(s, &begin)) {
+            *error = "[UnicodeManager] Parsing code point failed.";
             return false;
         }
         s = line.substr(dot + 2, split - (dot + 2));
-        if (!ParseHexCodePoint(s, &end_incl, error)) {
+        if (!strings::ParseHex(s, &end_incl)) {
+            *error = "[UnicodeManager] Parsing code point failed.";
             return false;
         }
     }
     uint8_t combining_class;
     s = line.substr(split + 1);
-    if (!ParseUInt8(s, &combining_class, error)) {
+    if (!strings::ParseDec(s, &combining_class)) {
+        *error = "[UnicodeManager] Parsing canonical combining class failed.";
         return false;
     }
     for (auto c = begin; c <= end_incl; ++c) {
@@ -150,7 +85,8 @@ bool SplitKeyToValues(const string& in, size_t split, ucode* from_c,
                       ustring* to_cc, string* error) {
     to_cc->clear();
     string s = in.substr(0, split);
-    if (!ParseHexCodePoint(s, from_c, error)) {
+    if (!strings::ParseHex(s, from_c)) {
+        *error = "[UnicodeManager] Parsing code point failed.";
         return false;
     }
     s = in.substr(split + 1);
@@ -159,7 +95,8 @@ bool SplitKeyToValues(const string& in, size_t split, ucode* from_c,
     to_cc->reserve(ss.size());
     for (auto& item : ss) {
         ucode to_c;
-        if (!ParseHexCodePoint(item, &to_c, error)) {
+        if (!strings::ParseHex(item, &to_c)) {
+            *error = "[UnicodeManager] Parsing code point failed.";
             return false;
         }
         to_cc->emplace_back(to_c);
@@ -208,7 +145,7 @@ bool LoadNFCFile(
     }
 
     string line;
-    while (EachLine(&in, &line)) {
+    while (files::EachCommentableLine(&in, &line)) {
         size_t x = line.find(':');
         if (x != ~0ul) {
             if (HandleNFCLineCombiningClass(line, x, c2k, error)) {
@@ -253,7 +190,7 @@ bool LoadNFKCFile(const string& nfkc_f,
     }
 
     string line;
-    while (EachLine(&in, &line)) {
+    while (files::EachCommentableLine(&in, &line)) {
         size_t x = line.find('>');
         if (x == ~0ul) {
             *error = "[UnicodeManager] '>' missing from NFKC file line.";

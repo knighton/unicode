@@ -9,6 +9,14 @@ using std::vector;
 
 namespace strings {
 
+template <typename Int>
+bool ParseDec(const string& s, Int* n);
+
+template <typename Int>
+bool ParseHex(const string& s, Int* n);
+
+bool IsSpace(const string& s);
+
 // Split a string |s| into pieces separated by |c| into |v|.
 //
 // Examples:
@@ -30,6 +38,8 @@ void SStringPrintf(string* output, const char* format, ...);
 void StringAppendF(string* output, const char* format, ...);
 string StringPrintf(const char* format, ...);
 
-}  // namespace string
+}  // namespace strings
+
+#include "cc/strings_impl.h"
 
 #endif  // CC_STRINGS_H_
