@@ -86,6 +86,16 @@ class UnicodeManager {
     void Decompose(const unordered_map<ucode, ustring>& decomp_c2cc,
                    ustring* inout) const;
 
+    // Returns whether it modified the string.
+    bool IntraUPCComposeOnce(const ustring& in, const UnicodeSpan& span,
+                             ustring* out) const;
+
+    // Returns whether it modified the string.
+    bool IntraUPCComposeStep(ustring* inout) const;
+
+    // Returns whether it modified the string.
+    bool InterUPCComposeStep(ustring* inout) const;
+
     // Decompose, reorder, and recompose the code points given mappings.
     void Compose(const unordered_map<ucode, ustring>& decomp_c2cc,
                  ustring* inout) const;

@@ -10,8 +10,6 @@ using std::getline;
 using std::ifstream;
 using std::map;
 
-#define UNUSED(a) &(a)
-
 template <typename Container>
 size_t ContainerHash<Container>::operator()(const Container& c) const {
     return boost::hash_range(c.begin(), c.end());
@@ -417,11 +415,106 @@ void UnicodeManager::Decompose(
     }
 }
 
+bool UnicodeManager::IntraUPCComposeOnce(
+        const ustring& in, const UnicodeSpan& span, ustring* out) const {
+    // Look for matches.
+    for (auto i = span.begin + 1; i < span.end_excl; ++i) {
+        // If it's the same combining class as the previous code point, it's
+        // blocked from combining.
+        if (span.begin + 1 < i) {
+            auto prev_k = GetCombiningClass(in[i - 1]);
+            auto k = GetCombiningClass(in[i]);
+            if (prev_k == k) {
+                continue;
+            }
+        }
+
+        // Look up the pair of (starter, non-starter) in the compositions.
+        ustring pair;
+        pair.emplace_back(in[span.begin]);
+        pair.emplace_back(in[i]);
+        auto it = compose_pair2c_.find(pair);
+        if (it == compose_pair2c_.end()) {
+            continue;
+        }
+
+        // We found it, so add its composition, then the others.  Then we're
+        // done.
+        auto& composed = it->second;
+        out->emplace_back(composed);
+        for (auto j = span.begin + 1; j < span.end_excl; ++j) {
+            out->emplace_back(in[j]);
+        }
+        return true;
+    }
+
+    // Didn't find any matches.
+    for (auto i = span.begin; i < span.end_excl; ++i) {
+        out->emplace_back(in[i]);
+    }
+    return false;
+}
+
+bool UnicodeManager::IntraUPCComposeStep(ustring* inout) const {
+    size_t index = 0;
+    UnicodeSpan span;
+    bool changed = false;
+    auto& in = *inout;
+    ustring out;
+    while (EachUPC(in, &index, &span)) {
+        changed |= IntraUPCComposeOnce(in, span, &out);
+    }
+    if (changed) {
+        *inout = out;
+    }
+    return changed;
+}
+
+bool UnicodeManager::InterUPCComposeStep(ustring* inout) const {
+    auto& in = *inout;
+    auto i = 0u;
+    auto changed = false;
+    ustring out;
+    while (i < in.size() - 1) {
+        auto& first = in[i];
+        auto& second = in[i + 1];
+        ustring pair;
+        pair.emplace_back(first);
+        pair.emplace_back(second);
+        auto it = compose_pair2c_.find(pair);
+        if (it != compose_pair2c_.end()) {
+            auto& composed = it->second;
+            out.emplace_back(composed);
+            i += 2;
+            changed = true;
+        } else {
+            out.emplace_back(first);
+            ++i;
+        }
+    }
+    if (i == in.size() - 1) {
+        out.emplace_back(in[i]);
+    }
+    if (changed) {
+        *inout = out;
+    }
+    return changed;
+}
+
 void UnicodeManager::Compose(
         const unordered_map<ucode, ustring>& decomp_c2cc,
         ustring* inout) const {
-    UNUSED(decomp_c2cc);
-    UNUSED(inout);
+    Decompose(decomp_c2cc, inout);
+
+    korean_.Compose(inout);
+
+    while (IntraUPCComposeStep(inout)) {
+        ;
+    }
+
+    while (InterUPCComposeStep(inout)) {
+        ;
+    }
 }
 
 bool UnicodeManager::Normalize(
