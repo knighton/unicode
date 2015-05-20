@@ -1,4 +1,4 @@
-#include "cc/korean_manager.h"
+#include "cc/unicode_manager.h"
 
 int main() {
 }
