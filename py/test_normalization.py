@@ -1,5 +1,6 @@
 from time import time
 
+from python_unicode_manager import PythonUnicodeManager
 from unicodedata_unicode_manager import UnicodedataUnicodeManager
 from util import each_line
 
@@ -21,39 +22,49 @@ def each_test_line(f):
 
 def check(u, orig, nfc, nfd, nfkc, nfkd):
     t0 = time()
-    assert u.normalize('NFC', orig) == nfc
-    assert u.normalize('NFC', nfc) == nfc
-    assert u.normalize('NFC', nfd) == nfc
-    assert u.normalize('NFC', nfkc) == nfkc
-    assert u.normalize('NFC', nfkd) == nfkc
+    nfc0 = u.normalize('NFC', orig) == nfc
+    nfc1 = u.normalize('NFC', nfc) == nfc
+    nfc2 = u.normalize('NFC', nfd) == nfc
+    nfc3 = u.normalize('NFC', nfkc) == nfkc
+    nfc4 = u.normalize('NFC', nfkd) == nfkc
     t1 = time()
-    assert u.normalize('NFD', orig) == nfd
-    assert u.normalize('NFD', nfc) == nfd
-    assert u.normalize('NFD', nfd) == nfd
-    assert u.normalize('NFD', nfkc) == nfkd
-    assert u.normalize('NFD', nfkd) == nfkd
+    nfd0 = u.normalize('NFD', orig) == nfd
+    nfd1 = u.normalize('NFD', nfc) == nfd
+    nfd2 = u.normalize('NFD', nfd) == nfd
+    nfd3 = u.normalize('NFD', nfkc) == nfkd
+    nfd4 = u.normalize('NFD', nfkd) == nfkd
     t2 = time()
-    assert u.normalize('NFKC', orig) == nfkc
-    assert u.normalize('NFKC', nfc) == nfkc
-    assert u.normalize('NFKC', nfd) == nfkc
-    assert u.normalize('NFKC', nfkc) == nfkc
-    assert u.normalize('NFKC', nfkd) == nfkc
+    nfkc0 = u.normalize('NFKC', orig) == nfkc
+    nfkc1 = u.normalize('NFKC', nfc) == nfkc
+    nfkc2 = u.normalize('NFKC', nfd) == nfkc
+    nfkc3 = u.normalize('NFKC', nfkc) == nfkc
+    nfkc4 = u.normalize('NFKC', nfkd) == nfkc
     t3 = time()
-    assert u.normalize('NFKD', orig) == nfkd
-    assert u.normalize('NFKD', nfc) == nfkd
-    assert u.normalize('NFKD', nfd) == nfkd
-    assert u.normalize('NFKD', nfkc) == nfkd
-    assert u.normalize('NFKD', nfkd) == nfkd
+    nfkd0 = u.normalize('NFKD', orig) == nfkd
+    nfkd1 = u.normalize('NFKD', nfc) == nfkd
+    nfkd2 = u.normalize('NFKD', nfd) == nfkd
+    nfkd3 = u.normalize('NFKD', nfkc) == nfkd
+    nfkd4 = u.normalize('NFKD', nfkd) == nfkd
     t4 = time()
-    return t1 - t0, t2 - t1, t3 - t2, t4 - t3
+
+    nfc = all([nfc0, nfc1, nfc2, nfc3, nfc4])
+    nfd = all([nfd0, nfd1, nfd2, nfd3, nfd4])
+    nfkc = all([nfkc0, nfkc1, nfkc2, nfkc3, nfkc4])
+    nfkd = all([nfkd0, nfkd1, nfkd2, nfkd3, nfkd4])
+    ok = all([nfc, nfd, nfkc, nfkd])
+
+    return ok, t1 - t0, t2 - t1, t3 - t2, t4 - t3
 
 
 def dump_percentiles(name, tt):
+    assert tt
     tt.sort()
     pcts = [0, 10, 50, 90, 99, 99.9]
     ss = ['times:']
     for pct in pcts:
         x = int(len(tt) * pct / 100.0)
+        if x == len(tt):
+            x = len(tt) - 1
         ss.append('%sth=%.3fus' % (
             str(pct).replace('.0', ''), tt[x] * 1000000))
     print '%s' % name, ' '.join(ss)
@@ -67,16 +78,16 @@ def test_normalization(name, mgr):
     nfkc_tt = []
     nfkd_tt = []
     for orig, nfc, nfd, nfkc, nfkd in each_test_line(TEST_F):
-	try:
-            nfc_t, nfd_t, nfkc_t, nfkd_t = \
-                check(mgr, orig, nfc, nfd, nfkc, nfkd)
-            nfc_tt.append(nfc_t)
-            nfd_tt.append(nfd_t)
-            nfkc_tt.append(nfkc_t)
-            nfkd_tt.append(nfkd_t)
+        is_ok, nfc_t, nfd_t, nfkc_t, nfkd_t = \
+            check(mgr, orig, nfc, nfd, nfkc, nfkd)
+        if is_ok:
             ok += 1
-        except:
+        else:
             fail += 1
+        nfc_tt.append(nfc_t)
+        nfd_tt.append(nfd_t)
+        nfkc_tt.append(nfkc_t)
+        nfkd_tt.append(nfkd_t)
 
     assert ok + fail
 
@@ -87,11 +98,15 @@ def test_normalization(name, mgr):
     dump_percentiles('NFD', nfd_tt)
     dump_percentiles('NFKC', nfkc_tt)
     dump_percentiles('NFKD', nfkd_tt)
+    print
 
 
 def main():
     u = UnicodedataUnicodeManager()
     test_normalization('unicodedata', u)
+
+    u = PythonUnicodeManager.from_files(NFC_F, NFKC_F)
+    test_normalization('pure python', u)
 
 
 if __name__ == '__main__':
