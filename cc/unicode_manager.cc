@@ -1,6 +1,7 @@
 #include "unicode_manager.h"
 
 #include <boost/functional/hash.hpp>
+#include <cctype>
 #include <map>
 #include <fstream>
 
@@ -16,6 +17,30 @@ size_t ContainerHash<Container>::operator()(const Container& c) const {
 }
 
 namespace {
+
+bool IsSpace(const string& s) {
+    for (auto& c : s) {
+        if (!isspace(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool EachLine(ifstream* in, string* line) {
+    while (getline(*in, *line)) {
+        size_t x = line->find('#');
+        if (x != ~0ul) {
+            line->resize(x);
+        }
+        strings::Trim(line);
+        if (IsSpace(*line)) {
+            continue;
+        }
+        return true;
+    }
+    return false;
+}
 
 bool GetBounds(const unordered_map<ucode, UnicodeCombiningClass>& c2k,
                ucode* first_nonzero_k_ucode, ucode* last_nonzero_k_ucode) {
@@ -98,6 +123,7 @@ bool HandleNFCLineCombiningClass(
         end_incl = begin;
     } else {
         if (!(dot + 1 < split && line[dot + 1] == '.')) {
+            *error = "[UnicodeManager] Needs two dots.";
             return false;
         }
         s = line.substr(0, dot);
@@ -176,8 +202,13 @@ bool LoadNFCFile(
         unordered_map<ustring, ucode, ContainerHash<ustring>>* compose_pair2c,
         string* error) {
     ifstream in(nfc_f);
+    if (!in.good()) {
+        *error = "[UnicodeManager] Could not open file.";
+        return false;
+    }
+
     string line;
-    while (getline(in, line)) {
+    while (EachLine(&in, &line)) {
         size_t x = line.find(':');
         if (x != ~0ul) {
             if (HandleNFCLineCombiningClass(line, x, c2k, error)) {
@@ -216,8 +247,13 @@ bool LoadNFCFile(
 bool LoadNFKCFile(const string& nfkc_f,
                   unordered_map<ucode, ustring>* nfkd_c2cc, string* error) {
     ifstream in(nfkc_f);
+    if (!in.good()) {
+        *error = "[UnicodeManager] Could not open file.";
+        return false;
+    }
+
     string line;
-    while (getline(in, line)) {
+    while (EachLine(&in, &line)) {
         size_t x = line.find('>');
         if (x == ~0ul) {
             *error = "[UnicodeManager] '>' missing from NFKC file line.";

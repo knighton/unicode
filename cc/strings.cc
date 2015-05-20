@@ -59,16 +59,16 @@ void Trim(string* s) {
         return;
     }
 
-    auto end = ~0ul;
+    auto end_incl = ~0ul;
     for (auto i = s->size() - 1; i != ~0ul; --i) {
         auto& c = (*s)[i];
-        if (isspace(c)) {
-            end = i;
+        if (!isspace(c)) {
+            end_incl = i;
             break;
         }
     }
 
-    *s = s->substr(begin, end - begin);
+    *s = s->substr(begin, end_incl - begin + 1);
 }
 
 static void InternalStringPrintf(string* output, const char* format, va_list ap) {
