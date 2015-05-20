@@ -55,6 +55,13 @@ class UnicodeManager {
     bool Normalize(UnicodeNormalizationMethod method, ustring* s) const;
 
   private:
+    // Called by EachUPC().  Returns true iff it got a span.
+    bool EachJamoUPC(const ustring& in, size_t* index, UnicodeSpan* span) const;
+
+    // Called by EachUPC().  Returns true iff it got a span.
+    bool EachNormalUPC(const ustring& in, size_t* index,
+                       UnicodeSpan* span) const;
+
     unordered_map<ucode, UnicodeCombiningClass> c2k_;
     ucode first_nonzero_k_ucode_;
     ucode last_nonzero_k_ucode_;

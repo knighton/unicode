@@ -278,10 +278,62 @@ bool UnicodeManager::InitFromFiles(
 }
 
 UnicodeCombiningClass UnicodeManager::GetCombiningClass(ucode c) const {
+    if (c < first_nonzero_k_ucode_) {
+        return 0;
+    }
+
+    if (last_nonzero_k_ucode_ < c) {
+        return 0;
+    }
+
+    auto it = c2k_.find(c);
+    if (it != c2k_.end()) {
+        return it->second;
+    }
+
+    return 0;
+}
+
+bool UnicodeManager::EachJamoUPC(
+        const ustring& in, size_t* x, UnicodeSpan* span) const {
+    span->begin = *x;
+    ++(*x);
+    if (*x == in.size() || !korean_.IsMedialJamo(in[*x])) {
+        span->end_excl = *x;
+        return true;
+    }
+
+    ++(*x);
+    if (korean_.IsFinalJamo(in[*x])) {
+        span->end_excl = *x + 1;
+    } else {
+        span->end_excl = *x;
+    }
+    return true;
+}
+
+bool UnicodeManager::EachNormalUPC(
+        const ustring& in, size_t* x, UnicodeSpan* span) const {
+    span->begin = *x;
+    ++(*x);
+    while (*x < in.size() && GetCombiningClass(in[*x])) {
+        ++(*x);
+    }
+    span->end_excl = *x;
+    return true;
 }
 
 bool UnicodeManager::EachUPC(
         const ustring& in, size_t* x, UnicodeSpan* span) const {
+    if (!(*x < in.size())) {
+        return false;
+    }
+
+    if (korean_.IsInitialJamo(in[*x])) {
+        return EachJamoUPC(in, x, span);
+    } else {
+        return EachNormalUPC(in, x, span);
+    }
 }
 
 bool UnicodeManager::Normalize(
