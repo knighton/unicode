@@ -74,7 +74,7 @@ void KoreanManager::Compose(ustring* inout) const {
     size_t i = 0;
     auto& in = *inout;
     ustring out;
-    while (i < in.size() - 2) {
+    while (i + 2 < in.size()) {
         if (!IsInitialJamo(in[i])) {
             out.emplace_back(in[i]);
             ++i;
