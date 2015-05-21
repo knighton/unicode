@@ -18,6 +18,9 @@ typedef uint8_t UnicodeCombiningClass;
 // A string containing Unicode code points.
 typedef vector<ucode> ustring;
 
+// Dump the Unicode string's hex values to stdout.
+void DumpUString(const ustring& s);
+
 // A user-perceived Unicode character.
 //
 // Contains indexes into a ustring.  Does not own memory.

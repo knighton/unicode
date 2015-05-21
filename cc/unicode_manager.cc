@@ -224,7 +224,7 @@ bool UnicodeManager::Init(
         return false;
     }
 
-    c2k_ = c2k_;
+    c2k_ = c2k;
     compose_pair2c_ = compose_pair2c;
     nfd_c2cc_ = nfd_c2cc;
     nfkd_c2cc_ = nfkd_c2cc;
@@ -241,7 +241,7 @@ bool UnicodeManager::InitFromFiles(
         return false;
     }
 
-    unordered_map<ucode, ustring> nfkd_c2cc;
+    unordered_map<ucode, ustring> nfkd_c2cc = nfd_c2cc;
     if (!LoadNFKCFile(nfkc_f, &nfkd_c2cc, error)) {
         return false;
     }
@@ -416,6 +416,9 @@ bool UnicodeManager::IntraUPCComposeOnce(
         auto& composed = it->second;
         out->emplace_back(composed);
         for (auto j = span.begin + 1; j < span.end_excl; ++j) {
+            if (j == i) {
+                continue;
+            }
             out->emplace_back(in[j]);
         }
         return true;

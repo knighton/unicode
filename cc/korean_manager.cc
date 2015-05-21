@@ -28,7 +28,7 @@ bool KoreanManager::IsMedialJamo(ucode c) const {
 }
 
 bool KoreanManager::IsFinalJamo(ucode c) const {
-    return jamo_final_base_ <= c && c <= jamo_final_base_;
+    return jamo_final_base_ <= c && c <= jamo_end_incl_;
 }
 
 ucode KoreanManager::HangulFromTwoJamo(ucode a, ucode b) const {
@@ -58,7 +58,6 @@ bool KoreanManager::AppendJamoFromHangul(ucode hangul, ustring* out) const {
     hangul /= jamo_final_count_;
     auto b = hangul % jamo_medial_count_;
     auto a = hangul / jamo_medial_count_;
-
     a += jamo_initial_base_;
     out->emplace_back(a);
     b += jamo_medial_base_;
