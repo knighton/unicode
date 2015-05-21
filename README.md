@@ -2,7 +2,7 @@
 
 This is a minimalist Unicode library that does normalization and user-perceived character segmentation.  Two identical versions, in C++ and pure python.
 
-#### age:
+#### Usage:
 
     $ make all
     $ make test_cc
@@ -10,15 +10,13 @@ This is a minimalist Unicode library that does normalization and user-perceived 
     
 ### Correctness:
 
-Everything passes against [unicode.org](http://unicode.org)'s [NormalizationTest.txt](http://unicode.org/Public/UNIDATA/NormalizationTest.txt) for Unicode 7.0.0.
-
-Python's unicodedata module uses 5.2.0.
+The libraries use data for Unicode 7.0.0, and test against the official  [NormalizationTest.txt](http://unicode.org/Public/UNIDATA/NormalizationTest.txt) at [unicode.org](http://unicode.org).  Python's unicodedata module uses version 5.2.0.  This may or may not matter to you.
     
 #### Performance:
 
 From [Macchiato FAQ](http://www.macchiato.com/unicode/nfc-faq): "according to data at Google ... ~99.98% of web HTML page content characters are definitely NFC".  Combining characters are rare in practice.
 
-NormalizationTest.txt contains all manner of combining characters and should be expected to skew performance toward the worst case.
+NormalizationTest.txt contains a variety of combining characters and should be expected to skew performance toward the worst case.
 
 Performance against NormalizationTest.txt on my machine:
 
@@ -33,7 +31,7 @@ C++ (microsec)
 
 Python unicodedata module (microsec)
 
-501 normalizations wrong, 18080 correct against Unicode 7.0.0 data.
+(501 normalizations wrong, 18080 correct against Unicode 7.0.0 data)
 
 |      | 0th   | 10th  | 50th  | 90th  | 99th  | 99.9th |
 | :--- | ----: | ----: | ----: | ----: | ----: | -----: |
