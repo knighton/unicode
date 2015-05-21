@@ -29,7 +29,14 @@ FLAGS = $(FLAGS_BASE) $(FLAGS_WARN) $(FLAGS_WARN_DISABLE)
 
 all:
 	mkdir -p $(BIN_DIR)
-	$(CC) `find -type f -name "*.cc"` $(SRC_ROOT)/cc/test.cpp -o $(BIN_DIR)/test $(FLAGS)
+	$(CC) `find -type f -name "*.cc"` $(SRC_ROOT)/cc/test_normalization.cpp -o $(BIN_DIR)/test_normalization $(FLAGS)
+
+test_cc:
+	./bin/test_normalization
+
+test_py:
+	cd py; python test_normalization.py
 
 clean:
 	rm -rf $(BIN_DIR)
+
