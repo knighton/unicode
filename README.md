@@ -8,7 +8,19 @@ This is a minimalist Unicode library that does normalization and user-perceived 
     $ make test_cc
     $ make test_py
     
-### Correctness:
+#### To do:
+
+* Python version: make each_upc() group jamo
+* ICU performance comparison
+
+#### More info:
+
+* http://unicode.org/reports/tr15/
+* http://unicode.org/versions/Unicode7.0.0/ch02.pdf
+* http://unicode.org/versions/Unicode7.0.0/ch03.pdf
+* http://unicode.org/faq/normalization.html
+
+#### Correctness:
 
 The libraries use data for Unicode 7.0.0, and test against the official  [NormalizationTest.txt](http://unicode.org/Public/UNIDATA/NormalizationTest.txt) at [unicode.org](http://unicode.org).  Python's unicodedata module uses version 5.2.0.  This may or may not matter to you.
     
