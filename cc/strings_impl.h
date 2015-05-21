@@ -25,9 +25,9 @@ bool ParseHex(const string& s, int_t* n) {
         if ('0' <= c && c <= '9') {
             digit = static_cast<int_t>(c - '0');
         } else if ('A' <= c && c <= 'F') {
-            digit = static_cast<int_t>(c - 'A');
+            digit = static_cast<int_t>(c - 'A') + 10;
         } else if ('a' <= c && c <= 'f') {
-            digit = static_cast<int_t>(c - 'a');
+            digit = static_cast<int_t>(c - 'a') + 10;
         } else {
             return false;
         }
