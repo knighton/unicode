@@ -111,8 +111,7 @@ void DumpPercentiles(const string& name, const vector<uint64_t>& ff) {
     for (auto i = 0u; i < indexes.size(); ++i) {
         auto& pctile = percentiles[i];
         auto& index = indexes[i];
-        printf("* %03lu/1000 %.3lfus\n", pctile,
-               static_cast<double>(ff[index]) / 1000.0);
+        printf("* %03lu/1000 %6luns\n", pctile, ff[index]);
     }
     printf("\n");
 }
