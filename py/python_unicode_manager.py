@@ -9,7 +9,7 @@ def load_nfkc(code2ccc, nfkc_f, nfkd_c2cc):
     for line in each_line(nfkc_f):
         a, b = line.split('>')
         from_c = int(a, 16)
-        to_cc = map(lambda s: int(s, 16), b.split())
+        to_cc = list(map(lambda s: int(s, 16), b.split()))
         nfkd_c2cc[from_c] = to_cc
 
 
@@ -27,8 +27,8 @@ def load_nfc_combining_class(line, code2ccc):
 def load_nfc_nfd_only(code2ccc, line, nfd_c2cc):
     a, b = line.split('>')
     from_c = int(a, 16)
-    to_cc = map(lambda s: int(s, 16), b.split())
-    kkk = map(lambda code: code2ccc.get(code, 0), to_cc)
+    to_cc = list(map(lambda s: int(s, 16), b.split()))
+    kkk = list(map(lambda code: code2ccc.get(code, 0), to_cc))
     assert kkk == sorted(kkk)
     nfd_c2cc[from_c] = to_cc
 
@@ -36,8 +36,8 @@ def load_nfc_nfd_only(code2ccc, line, nfd_c2cc):
 def load_nfc_bidirectional(code2ccc, line, nfc_cc2c, nfd_c2cc):
     a, b = line.split('=')
     from_c = int(a, 16)
-    to_cc = map(lambda s: int(s, 16), b.split())
-    kkk = map(lambda code: code2ccc.get(code, 0), to_cc)
+    to_cc = list(map(lambda s: int(s, 16), b.split()))
+    kkk = list(map(lambda code: code2ccc.get(code, 0), to_cc))
     assert kkk == sorted(kkk)
     assert len(to_cc) == 2
     nfc_cc2c[tuple(to_cc)] = from_c
@@ -212,5 +212,5 @@ class PythonUnicodeManager(object):
         else:
             assert False
 
-        s = ''.join(map(unichr, nn))
+        s = ''.join(map(chr, nn))
         return s

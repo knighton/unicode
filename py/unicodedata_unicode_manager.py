@@ -9,7 +9,7 @@ class UnicodedataUnicodeManager(UnicodeManager):
     """
 
     def each_upc(self, nn):
-        cccs = map(unicodedata.combining, nn)
+        cccs = list(map(unicodedata.combining, nn))
 
         begins = [0]
         for i in range(1, len(nn)):

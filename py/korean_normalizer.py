@@ -47,9 +47,9 @@ class KoreanNormalizer(object):
     def jamo_from_hangul(self, n):
         n -= self.hangul_base
         final = n % self.final_count
-        n /= self.final_count
+        n //= self.final_count
         medial = n % self.medial_count
-        n /= self.medial_count
+        n //= self.medial_count
         initial = n
         initial += self.initial_base
         medial += self.medial_base

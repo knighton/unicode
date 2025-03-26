@@ -35,7 +35,7 @@ test_cc:
 	./bin/test_normalization
 
 test_py:
-	cd py; python test_normalization.py
+	cd py; python3 test_normalization.py
 
 clean:
 	rm -rf $(BIN_DIR)

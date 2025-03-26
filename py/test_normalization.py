@@ -15,8 +15,8 @@ def each_test_line(f):
         if line.startswith('@'):
             continue
         ss = line.split(';')[:-1]
-        nnn = map(lambda seg: map(lambda s: int(s, 16), seg.split()), ss)
-        ss = map(lambda nn: ''.join(map(unichr, nn)), nnn)
+        nnn = list(map(lambda seg: list(map(lambda s: int(s, 16), seg.split())), ss))
+        ss = list(map(lambda nn: ''.join(map(chr, nn)), nnn))
         yield ss
 
 
@@ -67,7 +67,7 @@ def dump_percentiles(name, tt):
             x = len(tt) - 1
         ss.append('%sth=%.3fus' % (
             str(pct).replace('.0', ''), tt[x] * 1000000))
-    print '%s' % name, ' '.join(ss)
+    print('%s' % name, ' '.join(ss))
 
 
 def test_normalization(name, mgr):
@@ -91,9 +91,9 @@ def test_normalization(name, mgr):
 
     assert ok + fail
 
-    print '%s:' % name
-    print '* ok: %d' % ok
-    print '* fail: %d' % fail
+    print('%s:' % name)
+    print('* ok: %d' % ok)
+    print('* fail: %d' % fail)
     dump_percentiles('NFC', nfc_tt)
     dump_percentiles('NFD', nfd_tt)
     dump_percentiles('NFKC', nfkc_tt)
