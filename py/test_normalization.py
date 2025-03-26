@@ -1,4 +1,4 @@
-from time import time
+from time import time_ns
 
 from python_unicode_manager import PythonUnicodeManager
 from unicodedata_unicode_manager import UnicodedataUnicodeManager
@@ -21,31 +21,31 @@ def each_test_line(f):
 
 
 def check(u, orig, nfc, nfd, nfkc, nfkd):
-    t0 = time()
+    t0 = time_ns()
     nfc0 = u.normalize('NFC', orig) == nfc
     nfc1 = u.normalize('NFC', nfc) == nfc
     nfc2 = u.normalize('NFC', nfd) == nfc
     nfc3 = u.normalize('NFC', nfkc) == nfkc
     nfc4 = u.normalize('NFC', nfkd) == nfkc
-    t1 = time()
+    t1 = time_ns()
     nfd0 = u.normalize('NFD', orig) == nfd
     nfd1 = u.normalize('NFD', nfc) == nfd
     nfd2 = u.normalize('NFD', nfd) == nfd
     nfd3 = u.normalize('NFD', nfkc) == nfkd
     nfd4 = u.normalize('NFD', nfkd) == nfkd
-    t2 = time()
+    t2 = time_ns()
     nfkc0 = u.normalize('NFKC', orig) == nfkc
     nfkc1 = u.normalize('NFKC', nfc) == nfkc
     nfkc2 = u.normalize('NFKC', nfd) == nfkc
     nfkc3 = u.normalize('NFKC', nfkc) == nfkc
     nfkc4 = u.normalize('NFKC', nfkd) == nfkc
-    t3 = time()
+    t3 = time_ns()
     nfkd0 = u.normalize('NFKD', orig) == nfkd
     nfkd1 = u.normalize('NFKD', nfc) == nfkd
     nfkd2 = u.normalize('NFKD', nfd) == nfkd
     nfkd3 = u.normalize('NFKD', nfkc) == nfkd
     nfkd4 = u.normalize('NFKD', nfkd) == nfkd
-    t4 = time()
+    t4 = time_ns()
 
     nfc = all([nfc0, nfc1, nfc2, nfc3, nfc4])
     nfd = all([nfd0, nfd1, nfd2, nfd3, nfd4])
@@ -59,15 +59,11 @@ def check(u, orig, nfc, nfd, nfkc, nfkd):
 def dump_percentiles(name, tt):
     assert tt
     tt.sort()
-    pcts = [0, 10, 50, 90, 99, 99.9]
-    ss = ['times:']
-    for pct in pcts:
-        x = int(len(tt) * pct / 100.0)
-        if x == len(tt):
-            x = len(tt) - 1
-        ss.append('%sth=%.3fus' % (
-            str(pct).replace('.0', ''), tt[x] * 1000000))
-    print('%s' % name, ' '.join(ss))
+    print('%s times:' % name)
+    for ile in [0, 100, 500, 900, 990, 1000]:
+        idx = min(len(tt) * ile // 1000, len(tt) - 1)
+        print('%3d/1000: %6dns' % (min(ile, 1000 - 1), tt[idx]))
+    print()
 
 
 def test_normalization(name, mgr):
