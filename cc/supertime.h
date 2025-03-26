@@ -1,6 +1,7 @@
 #ifndef CC_SUPERTIME_H_
 #define CC_SUPERTIME_H_
 
+#include <cstdint>
 #include <string>
 
 using std::string;

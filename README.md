@@ -7,7 +7,7 @@ This is a minimalist Unicode library that does normalization and user-perceived 
     $ make all
     $ make test_cc
     $ make test_py
-    
+
 #### To do:
 
 * Python version: make each_upc() group jamo
@@ -23,7 +23,7 @@ This is a minimalist Unicode library that does normalization and user-perceived 
 #### Correctness:
 
 The libraries use data for Unicode 7.0.0, and test against the official  [NormalizationTest.txt](http://unicode.org/Public/UNIDATA/NormalizationTest.txt) at [unicode.org](http://unicode.org).  Python's unicodedata module uses version 5.2.0.  This may or may not matter to you.
-    
+
 #### Performance:
 
 From [Macchiato FAQ](http://www.macchiato.com/unicode/nfc-faq): "according to data at Google ... ~99.98% of web HTML page content characters are definitely NFC".  Combining characters are rare in practice.

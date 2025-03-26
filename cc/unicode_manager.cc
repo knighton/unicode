@@ -1,6 +1,5 @@
 #include "unicode_manager.h"
 
-#include <boost/functional/hash.hpp>
 #include <map>
 #include <fstream>
 
@@ -13,7 +12,14 @@ using std::map;
 
 template <typename Container>
 size_t ContainerHash<Container>::operator()(const Container& c) const {
-    return boost::hash_range(c.begin(), c.end());
+    size_t val = 0;
+    std::hash<typename Container::value_type> hasher;
+
+    for (const auto& element : c) {
+        val ^= hasher(element) + 0x9e3779b9 + (val << 6) + (val >> 2);
+    }
+
+    return val;
 }
 
 namespace {
@@ -384,7 +390,6 @@ void UnicodeManager::Decompose(
         ustring* inout) const {
     korean_.Decompose(inout);
     while (DecomposeStep(decomp_c2cc, inout)) {
-        ;
     }
 }
 
@@ -485,11 +490,9 @@ void UnicodeManager::Compose(
     korean_.Compose(inout);
 
     while (IntraUPCComposeStep(inout)) {
-        ;
     }
 
     while (InterUPCComposeStep(inout)) {
-        ;
     }
 }
 

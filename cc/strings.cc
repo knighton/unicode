@@ -1,6 +1,7 @@
 #include "strings.h"
 
 #include <cctype>
+#include <cstdarg>
 
 namespace strings {
 
